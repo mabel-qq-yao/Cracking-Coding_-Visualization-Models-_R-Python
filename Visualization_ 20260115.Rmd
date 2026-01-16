@@ -1,0 +1,604 @@
+---
+title: 'Data Process by R '
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    df_print: paged
+  word_document:
+    toc: true
+    toc_depth: '3'
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+---
+## My notes 
+R/ Python 
+
+SAS, 
+
+
+RapidMiner, 
+
+SQL/ Excel, 
+
+KNIME, 
+
+
+Tableau/ Power BI
+
+
+Spark/Hardoop/Hive/ 
+
+
+
+
+
+## load data files 
+
+Base R 
+
+read.csv("file.csv")
+
+read.csv2("file.csv")
+
+read.table("file.txt", header = TRUE, sep = "\t")
+
+
+readr (tidyverse)
+
+library(readr)
+
+read_csv("file.csv")
+
+read_tsv("file.tsv")
+
+read_delim("file.txt", delim = ";")
+
+
+library(data.table)
+
+fread("file.csv")
+
+library(readxl)
+
+read_excel("file.xlsx", sheet = 1)
+
+library(openxlsx)
+
+read.xlsx("file.xlsx", sheet = 1)
+
+
+library(jsonlite)
+
+fromJSON("file.json")
+
+
+SQL Databases: With DBI + database drivers
+
+library(DBI)
+
+con <- dbConnect(RSQLite::SQLite(), "mydatabase.db")
+
+df <- dbGetQuery(con, "SELECT * FROM table")
+
+library(dplyr)
+
+tbl(con, "table_name")
+
+
+SAS / SPSS / Stata
+
+library(haven)
+
+read_sas("file.sas7bdat")
+
+read_sav("file.sav")     # SPSS
+
+read_dta("file.dta")     # Stata
+
+
+
+
+
+# Library 
+
+```{r}
+library(datasets)
+library(ggplot2) #mpg, diamonds, economics, faithfuld
+library(MASS) #Boston, survey, birthwt, cats, Cars93
+```
+
+
+
+# Coding Practice 
+data("economics")   
+
+head(economics)
+
+attach(economics)
+
+head(economics)
+
+dim(economics)
+
+# nrow() ncol()
+summary(economics)
+
+str(economics)
+
+colnames(economics)
+
+# plot in base R 
+plot(economics)
+
+
+plot(
+  economics$date,
+  economics$uempmed,
+  type = "l",                      # line plot
+  col = "blue",
+  lwd = 2,
+  xlab = "Date",
+  ylab = "Median Unemployment Duration",
+  main = "US Unemployment Duration Over Time"
+)
+
+
+
+
+```{r}
+# list all data in datasets package
+#data()
+```
+
+
+```{r}
+data(Boston)
+head(Boston)
+```
+
+```{r}
+str(Boston)
+```
+
+
+
+```{r}
+# plot(graph, vertex.label=NA, edge.color="black", edge.width=2, vertex.size=8, vertex.color="orange")
+# one vector, two vectors, 
+plot(Boston)
+```
+
+```{r}
+library(GGally)
+library(dplyr)
+```
+
+```{r}
+#library(GGally)
+ggpairs(Boston[, c("crim", "medv")], progress = FALSE)
+```
+
+
+```{r}
+ggpairs(Boston %>% select(crim, medv), progress = FALSE)
+```
+
+
+```{r}
+# The pipe operator passes the output of one function to the next %>%
+Boston %>%
+  filter(rm > 6) %>%                     # filter houses with more than 6 rooms
+  group_by(rad) %>%                     # group by Charles River proximity
+  summarise(avg_medv = mean(medv)) %>%   # calculate average median value
+  #arrange(desc(rad))                # sort descending
+  arrange(rad)
+```
+
+
+```{r}
+ggpairs(
+  Boston[, c("crim","zn","indus","medv","chas")], 
+  progress = FALSE,
+  mapping = aes(color = factor(chas)),
+  upper = list(continuous = wrap("cor")),
+  lower = list(continuous = wrap("smooth", alpha = 0.6)),
+  diag  = list(continuous = wrap("densityDiag", alpha = 0.5))) +
+  scale_color_manual(values = c("0" = "steelblue", "1" = "tomato")) +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 12), legend.position = "bottom")
+```
+
+
+
+
+# ggplot2 
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+ggplot() + 
+  geom_point(
+    mapping = aes(
+      x = c(345,234,122,33), 
+      y = c(325,434,234,232),
+      color=c("dodgerblue4", "red", "seagreen", "orange")
+    )
+  )
+```
+
+
+```{r}
+ggplot() + 
+  geom_point(
+    mapping = aes(
+      x = c(345,234,122,33), 
+      y = c(325,434,234,232),
+      #color=c("dodgerblue4", "red", "seagreen", "orange")
+    ),
+    
+    color=c("dodgerblue4", "red", "seagreen", "orange"),
+    size = 10
+  )
+```
+
+
+
+
+```{r}
+data("penguins")
+head(penguins)
+```
+
+```{r}
+str(penguins)
+```
+
+
+```{r}
+ggplot() + 
+  geom_point(
+    data = penguins,
+    mapping = aes(
+      x = body_mass, 
+      y = flipper_len,
+      color = species
+    ), 
+    #color = "dodgerblue4",
+    size = 4, 
+    alpha = 0.75,
+    position = position_jitter()
+  ) + 
+  labs(
+    x = "Body Weight (in g)", 
+    y = "Flipper Length (in mm)", 
+    color = "Species", 
+    title = "Heavier penguins have longer flippers", 
+    subtitle = "Is this always correct?", 
+    caption = "practice data visualization by ggplot2"
+  ) + 
+  theme_minimal(
+    base_size = 14) + 
+  theme(
+    plot.title.position = "plot", 
+    plot.caption.position = "plot", 
+    legend.position = "top",
+    plot.title = element_text(
+      size = 18,
+      face = "bold", 
+      color = "red"
+    ),
+    #aspect.ratio = 0.8, 
+    plot.background = element_rect(
+      fill = "yellow",
+      color = "black", 
+      linewidth = 3
+    )
+  ) + 
+  scale_x_continuous(
+    limits = c(3000, 10000), 
+    breaks = c(3000, 6000, 9000), 
+    label = c("3000", "6000", "9000")
+  )
+
+
+
+```
+
+
+
+
+```{r}
+ggplot() + 
+  geom_jitter(
+    data = penguins,
+    mapping = aes(
+      x = body_mass, 
+      y = flipper_len,
+      color = species
+    ), 
+    #color = "dodgerblue4",
+    size = 4, 
+    alpha = 0.75
+  )
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+ggplot() + 
+  geom_bar(
+    data = penguins, 
+    mapping = aes(
+      x = body_mass, 
+      fill = species
+    ), 
+    alpha = 0.5
+  )
+```
+
+
+```{r}
+counted_penguins = penguins|> count(species)
+
+ggplot() + 
+  geom_bar(
+    data = counted_penguins, 
+    mapping = aes(
+      y = species, 
+      x = n
+    ), 
+    stat = "identity"
+  )
+```
+
+
+```{r}
+ggplot() + 
+  geom_col(
+    data = counted_penguins, 
+    mapping = aes(
+      y = species, 
+      x = n),
+    fill = "dodgerblue4"
+  ) + 
+labs(
+    x = "Body Weight (in g)", 
+    y = "Flipper Length (in mm)", 
+    color = "Species", 
+    title = "Heavier penguins have longer flippers", 
+    subtitle = "Is this always correct?", 
+    caption = "practice data visualization by ggplot2"
+  ) +
+  geom_text(
+    data = counted_penguins, 
+    mapping = aes(
+      y = species, 
+      x = n - 6, 
+      label = n
+      ), 
+    size = 6,
+    color = "white", 
+    fontface = "bold"
+  )
+
+
+```
+
+```{r}
+ggplot(data = counted_penguins) + 
+  geom_col(
+    mapping = aes(
+      y = species, 
+      x = n),
+    fill = "dodgerblue4"
+  ) + 
+labs(
+    x = "Body Weight (in g)", 
+    y = "Flipper Length (in mm)", 
+    color = "Species", 
+    title = "Heavier penguins have longer flippers", 
+    subtitle = "Is this always correct?", 
+    caption = "practice data visualization by ggplot2"
+  ) +
+  geom_text(
+    mapping = aes(
+      y = species, 
+      x = n - 6, 
+      label = n
+      ), 
+    size = 6,
+    color = "white", 
+    fontface = "bold"
+  )
+```
+
+
+
+```{r}
+ggplot() + 
+  geom_bar(
+    data = penguins, 
+    mapping = aes(
+      x = body_mass
+    ), 
+    stat="bin"
+  )
+
+```
+
+
+
+```{r}
+ggplot() + 
+  stat_bin(
+    data = penguins, 
+    mapping = aes(
+      x = body_mass
+    ),
+    #geom = "line"
+    #geom = "point"
+    geom = "bar"
+  )
+```
+
+
+
+
+
+```{r}
+ggplot() + 
+  geom_histogram(
+    data = penguins, 
+    mapping = aes(
+      x = body_mass, 
+      fill = sex
+    ),
+    position = position_identity(),
+    alpha = 0.5
+  )
+```
+
+
+
+
+
+```{r}
+ggplot() + 
+  geom_histogram(
+    data = penguins, 
+    mapping = aes(
+      x = body_mass, 
+      fill = sex
+    ),
+    position = position_identity(),
+    alpha = 0.5
+  ) + 
+  facet_wrap(vars(sex)) + 
+  theme(legend.position = "none")
+```
+
+
+
+
+
+
+```{r}
+library(gapminder)
+data(gapminder)
+head(gapminder)
+```
+
+
+
+```{r}
+str(gapminder)
+```
+
+
+```{r}
+ggplot(
+  data = gapminder, 
+  mapping = aes(
+    x = year, 
+    y = lifeExp, 
+    color = continent
+  )
+) + 
+  geom_jitter(
+    alpha = 0.4,
+    size = 2
+  ) + 
+  geom_smooth(se = FALSE, linewidth=2) + 
+  theme_minimal(base_size = 16) + 
+  labs(
+    x = element_blank(), 
+    y = "Life expectancy (in years)", 
+    title = "Life expectancy increased over time",
+    caption = "Data: Gapminder R Packages"
+  ) + 
+  facet_wrap(vars(continent), nrow = 1) + 
+  theme(
+    legend.position = "none", 
+    panel.grid.minor = element_blank()
+  ) + 
+  scale_x_continuous(breaks = c(1960, 1980, 2000))
+  
+  
+```
+
+
+
+
+
+
+```{r}
+d2 <- diamonds[sample(1:dim(diamonds)[1], 1000),] 
+#head()
+#summary()
+#str()
+#dim()
+#nrow()
+#ncol()
+```
+
+
+
+```{r}
+save.plot <- ggplot(data=d2, aes(x=carat, y=price)) 
+save.plot + geom_point() 
+myColors <- c("red","blue","green","yellow","orange","purple","grey") 
+save.plot <- ggplot(data=d2, aes(x=carat, y=price, color=color)) 
+save.plot + geom_point()+ 
+  scale_color_manual(values=myColors) +  
+  labs(title = "Quiz8 \n  Qianqian Yao") +  
+  theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
